@@ -40,7 +40,7 @@ function App() {
         {products.length > 0 ? (
           <ul>
             {products.map(p => (
-              <li key={p.id}><strong>{p.name}</strong> — {p.price} € (stock: {p.stock})</li>
+              <li key={p.id}><strong>{p.title}</strong> — {p.price} € (stock: {p.stock})</li>
             ))}
           </ul>
         ) : (

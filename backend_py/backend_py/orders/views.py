@@ -8,3 +8,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+    
+    @transaction.atomic
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
