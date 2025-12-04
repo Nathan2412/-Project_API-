@@ -2,15 +2,89 @@ import stripe
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import permissions
+from rest_framework import permissions, status
+from rest_framework.throttling import UserRateThrottle
+from backend_py.orders.models import Order
+
+
+class PaymentThrottle(UserRateThrottle):
+    """Sécurité: Limiter les tentatives de paiement"""
+    rate = '10/hour'
+
 
 class CreatePaymentIntent(APIView):
+    """
+    Vue sécurisée pour créer un PaymentIntent Stripe.
+    
+    Sécurité:
+    - Authentification requise
+    - Le montant est récupéré depuis une commande existante (pas du client)
+    - Vérification que la commande appartient à l'utilisateur
+    - Rate limiting pour prévenir les abus
+    """
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [PaymentThrottle]
 
     def post(self, request):
-        stripe.api_key = settings.STRIPE_SECRET_KEY if hasattr(settings, 'STRIPE_SECRET_KEY') else None
-        amount = int(float(request.data.get('amount', '0')) * 100)
+        # Vérifier que Stripe est configuré
+        if not getattr(settings, 'STRIPE_SECRET_KEY', None):
+            return Response(
+                {"error": "Paiement non configuré"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        
+        # Sécurité: Récupérer le montant depuis une commande existante
+        order_id = request.data.get('order_id')
+        
+        if not order_id:
+            return Response(
+                {"error": "order_id requis"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Sécurité: Vérifier que la commande appartient à l'utilisateur
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": "Commande introuvable"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Sécurité: Vérifier que la commande n'est pas déjà payée
+        if order.status != 'pending':
+            return Response(
+                {"error": "Cette commande ne peut pas être payée"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Sécurité: Le montant vient de la DB, pas du client
+        amount = int(float(order.total) * 100)  # Convertir en centimes
+        
         if amount <= 0:
-            return Response({"error": "Invalid amount"}, status=400)
-        intent = stripe.PaymentIntent.create(amount=amount, currency="usd")
-        return Response({"client_secret": intent.client_secret})
+            return Response(
+                {"error": "Montant invalide"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            intent = stripe.PaymentIntent.create(
+                amount=amount,
+                currency="eur",
+                metadata={
+                    'order_id': order.id,
+                    'user_id': request.user.id
+                }
+            )
+            return Response({
+                "client_secret": intent.client_secret,
+                "order_id": order.id,
+                "amount": float(order.total)
+            })
+        except stripe.error.StripeError as e:
+            return Response(
+                {"error": "Erreur de paiement"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
