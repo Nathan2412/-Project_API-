@@ -1,32 +1,28 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer
 
 
+class LoginThrottle(AnonRateThrottle):
+    """Limite les tentatives de connexion pour prevenir le brute force"""
+    rate = "5/min"
+
+
 class RegisterThrottle(AnonRateThrottle):
-    """Sécurité: Limiter les tentatives d'inscription (anti-bot/spam)"""
-    rate = '5/hour'
+    """Limite les inscriptions pour prevenir le spam"""
+    rate = "3/min"
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    """
-    Vue de login personnalisée pour utiliser l'email comme identifiant.
-    """
+    """Vue de login avec rate limiting"""
     serializer_class = CustomTokenObtainPairSerializer
+    throttle_classes = [LoginThrottle]
 
 
 class RegisterView(generics.CreateAPIView):
-    """
-    Vue d'inscription sécurisée.
-    
-    Sécurité:
-    - Rate limiting (5 inscriptions/heure par IP)
-    - Validation complète des données
-    - Hashage automatique du mot de passe
-    - Pas d'exposition de données sensibles
-    """
+    """Vue d'inscription avec validation et rate limiting"""
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
     throttle_classes = [RegisterThrottle]
@@ -36,22 +32,17 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Sécurité: Ne retourner que les infos non sensibles
         return Response({
-            "message": "Compte créé avec succès",
+            "message": "Compte cree",
             "user": {
                 "id": user.id,
-                "username": user.username,
-                "email": user.email
+                "username": user.username
             }
         }, status=status.HTTP_201_CREATED)
 
 
 class MeView(generics.RetrieveAPIView):
-    """
-    Vue pour récupérer les infos de l'utilisateur connecté.
-    Sécurisée par JWT - l'utilisateur ne peut voir que ses propres infos.
-    """
+    """Recupere les infos de l'utilisateur connecte"""
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 

@@ -7,11 +7,10 @@ from rest_framework.throttling import AnonRateThrottle
 
 
 class ExternalAPIThrottle(AnonRateThrottle):
-    """Sécurité: Limiter les appels aux API externes"""
+    """Limite les appels aux API externes"""
     rate = '30/min'
 
 
-# Liste blanche des devises valides (ISO 4217)
 VALID_CURRENCIES = {
     'EUR', 'USD', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD',
     'CNY', 'HKD', 'SGD', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK',
@@ -21,10 +20,7 @@ VALID_CURRENCIES = {
 
 
 class ExternalProducts(APIView):
-    """
-    Récupère des produits depuis une API externe.
-    Sécurisé avec rate limiting.
-    """
+    """Recupere des produits depuis une API externe"""
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ExternalAPIThrottle]
 
@@ -38,37 +34,28 @@ class ExternalProducts(APIView):
             return Response(r.json())
         except requests.RequestException:
             return Response(
-                {"error": "Service externe indisponible"},
+                {"error": "Service indisponible"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
 
 class Rates(APIView):
-    """
-    Récupère les taux de change.
-    
-    Sécurité:
-    - Validation stricte du paramètre 'base' (whitelist)
-    - Rate limiting
-    - Timeout sur les requêtes externes
-    """
+    """Recupere les taux de change"""
     permission_classes = [permissions.AllowAny]
     throttle_classes = [ExternalAPIThrottle]
 
     def get(self, request):
         base = request.query_params.get('base', 'EUR').upper().strip()
         
-        # Sécurité: Valider que la devise est dans la liste blanche
         if base not in VALID_CURRENCIES:
             return Response(
-                {"error": f"Devise invalide. Devises acceptées: {', '.join(sorted(VALID_CURRENCIES))}"},
+                {"error": "Devise invalide"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Sécurité: Validation supplémentaire (format ISO 4217)
         if not re.match(r'^[A-Z]{3}$', base):
             return Response(
-                {"error": "Format de devise invalide"},
+                {"error": "Format invalide"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -79,14 +66,14 @@ class Rates(APIView):
             return Response(r.json())
         except requests.RequestException:
             return Response(
-                {"error": "Service de taux de change indisponible"},
+                {"error": "Service indisponible"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
 
 class Health(APIView):
-    """Endpoint de santé pour les health checks"""
+    """Endpoint de sante"""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        return Response({"ok": True, "status": "healthy"})
+        return Response({"ok": True})

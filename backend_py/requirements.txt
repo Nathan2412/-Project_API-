@@ -1,8 +1,36 @@
-Django>=5.0,<6.0
-djangorestframework>=3.15
-djangorestframework-simplejwt>=5.3
-django-cors-headers>=4.4
-psycopg2-binary>=2.9
-stripe>=11.0
-django-environ>=0.11
-gunicorn>=21.2
+# ========================================
+# Projet API E-Commerce - Requirements
+# ========================================
+
+# === Django Core ===
+Django==5.2.8
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.1
+
+# === Database ===
+psycopg2-binary==2.9.11     # PostgreSQL adapter
+
+# === Security & Auth ===
+PyJWT==2.10.1               # JWT token handling
+django-cors-headers==4.9.0  # CORS headers for frontend
+
+# === Configuration ===
+django-environ==0.12.0      # Environment variables management
+
+# === External APIs ===
+stripe==14.0.1              # Payment processing
+requests==2.32.5            # HTTP client for external APIs
+
+# === Production Server ===
+gunicorn==23.0.0            # WSGI HTTP Server
+
+# === Core Dependencies (auto-installed) ===
+asgiref==3.11.0
+certifi==2025.11.12
+charset-normalizer==3.4.4
+idna==3.11
+packaging==25.0
+sqlparse==0.5.4
+typing_extensions==4.15.0
+tzdata==2025.2
+urllib3==2.5.0

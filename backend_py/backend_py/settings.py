@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 import environ
 
 env = environ.Env(
@@ -9,10 +10,9 @@ env = environ.Env(
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
-SECRET_KEY = env("SECRET_KEY", default="change-me")
+SECRET_KEY = env("SECRET_KEY", default="change-me-in-production")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
@@ -34,6 +34,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "backend_py.middleware.SecurityHeadersMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -53,7 +54,6 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -99,31 +99,49 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.UserRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "anon": "50/min",
-        "user": "200/min",
+        "anon": "30/min",
+        "user": "100/min",
+        "login": "5/min",
+        "register": "3/min",
     },
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+    "EXCEPTION_HANDLER": "backend_py.utils.custom_exception_handler",
 }
 
-# CORS
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:5173"]) 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:5173"])
 CORS_ALLOW_CREDENTIALS = True
 
-# Static files
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-# Security hardening
 SECURE_SSL_REDIRECT = env("DJANGO_SECURE_SSL_REDIRECT")
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = "same-origin"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 X_FRAME_OPTIONS = "DENY"
+SECURE_BROWSER_XSS_FILTER = True
 
-# Logging
+SILENCED_SYSTEM_CHECKS = ["security.W004"] if DEBUG else []
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -133,9 +151,11 @@ LOGGING = {
     "handlers": {
         "console": {"class": "logging.StreamHandler", "formatter": "standard"},
     },
-    "root": {"handlers": ["console"], "level": "INFO"},
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "django.security": {"handlers": ["console"], "level": "WARNING"},
+    },
 }
 
-# Stripe keys
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default=None)
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default=None)

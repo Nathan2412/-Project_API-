@@ -8,34 +8,24 @@ from backend_py.orders.models import Order
 
 
 class PaymentThrottle(UserRateThrottle):
-    """Sécurité: Limiter les tentatives de paiement"""
+    """Limite les tentatives de paiement"""
     rate = '10/hour'
 
 
 class CreatePaymentIntent(APIView):
-    """
-    Vue sécurisée pour créer un PaymentIntent Stripe.
-    
-    Sécurité:
-    - Authentification requise
-    - Le montant est récupéré depuis une commande existante (pas du client)
-    - Vérification que la commande appartient à l'utilisateur
-    - Rate limiting pour prévenir les abus
-    """
+    """Vue pour creer un PaymentIntent Stripe"""
     permission_classes = [permissions.IsAuthenticated]
     throttle_classes = [PaymentThrottle]
 
     def post(self, request):
-        # Vérifier que Stripe est configuré
         if not getattr(settings, 'STRIPE_SECRET_KEY', None):
             return Response(
-                {"error": "Paiement non configuré"},
+                {"error": "Paiement non configure"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         
         stripe.api_key = settings.STRIPE_SECRET_KEY
         
-        # Sécurité: Récupérer le montant depuis une commande existante
         order_id = request.data.get('order_id')
         
         if not order_id:
@@ -45,7 +35,6 @@ class CreatePaymentIntent(APIView):
             )
         
         try:
-            # Sécurité: Vérifier que la commande appartient à l'utilisateur
             order = Order.objects.get(id=order_id, user=request.user)
         except Order.DoesNotExist:
             return Response(
@@ -53,15 +42,13 @@ class CreatePaymentIntent(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Sécurité: Vérifier que la commande n'est pas déjà payée
         if order.status != 'pending':
             return Response(
-                {"error": "Cette commande ne peut pas être payée"},
+                {"error": "Cette commande ne peut pas etre payee"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Sécurité: Le montant vient de la DB, pas du client
-        amount = int(float(order.total) * 100)  # Convertir en centimes
+        amount = int(float(order.total) * 100)
         
         if amount <= 0:
             return Response(
@@ -83,7 +70,7 @@ class CreatePaymentIntent(APIView):
                 "order_id": order.id,
                 "amount": float(order.total)
             })
-        except stripe.error.StripeError as e:
+        except stripe.error.StripeError:
             return Response(
                 {"error": "Erreur de paiement"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
