@@ -34,7 +34,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    "backend_py.middleware.SecurityHeadersMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -43,6 +42,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "backend_py.middleware.SecurityHeadersMiddleware",
 ]
 
 ROOT_URLCONF = "backend_py.urls"

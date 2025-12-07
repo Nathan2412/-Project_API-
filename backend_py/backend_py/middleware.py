@@ -13,6 +13,9 @@ class SecurityHeadersMiddleware:
         response["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
         
+        # HSTS - Force HTTPS pendant 1 an, inclut les sous-domaines
+        response["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        
         response["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self'; "
@@ -25,10 +28,10 @@ class SecurityHeadersMiddleware:
             "form-action 'self';"
         )
         
-        if "Server" in response:
-            del response["Server"]
-        if "X-Powered-By" in response:
-            del response["X-Powered-By"]
+        # Supprimer les headers qui exposent des informations serveur
+        for header in ["Server", "X-Powered-By"]:
+            if header in response:
+                del response[header]
         
         response["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
         response["Pragma"] = "no-cache"
