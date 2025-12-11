@@ -3,7 +3,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from .models import Order
-from .serializers import OrderSerializer, OrderCreateSerializer
+from .serializers import OrderSerializer, OrderCreateSerializer, OrderUpdateSerializer
 
 
 class OrderThrottle(UserRateThrottle):
@@ -19,6 +19,8 @@ class OrderViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return OrderCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return OrderUpdateSerializer
         return OrderSerializer
 
     def get_queryset(self):
@@ -47,7 +49,19 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
 
     def update(self, request, *args, **kwargs):
-        return Response(
-            {"error": "Operation non autorisee"},
-            status=status.HTTP_403_FORBIDDEN
-        )
+        if not request.user.is_staff:
+            return Response(
+                {"error": "Operation non autorisee"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Permettre aux admins de mettre a jour le statut de la commande
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not request.user.is_staff:
+            return Response(
+                {"error": "Operation non autorisee"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Permettre aux admins de mettre a jour partiellement le statut
+        return super().partial_update(request, *args, **kwargs)

@@ -103,3 +103,20 @@ class OrderCreateSerializer(serializers.Serializer):
             )
         
         return order
+
+
+class OrderUpdateSerializer(serializers.ModelSerializer):
+    """Serializer pour la mise a jour du statut de commande par les admins"""
+    VALID_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']
+    
+    class Meta:
+        model = Order
+        fields = ['status']
+    
+    def validate_status(self, value):
+        """Valider que le statut est valide"""
+        if value not in self.VALID_STATUSES:
+            raise serializers.ValidationError(
+                f"Statut invalide. Valeurs autorisees: {', '.join(self.VALID_STATUSES)}"
+            )
+        return value
