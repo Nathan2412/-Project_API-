@@ -97,3 +97,91 @@ class Health(APIView):
 
     def get(self, request):
         return Response({"ok": True})
+
+
+class StoreLocator(APIView):
+    """Localiser des points de retrait/magasins pres d'un lieu via OpenStreetMap"""
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [ExternalAPIThrottle]
+
+    def get(self, request):
+        city = request.query_params.get('city', '').strip()
+        lat = request.query_params.get('lat', '').strip()
+        lon = request.query_params.get('lon', '').strip()
+        
+        # Valider les parametres
+        if not city and not (lat and lon):
+            return Response(
+                {"error": "Fournir soit 'city', soit 'lat' et 'lon'"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Utiliser l'API Nominatim d'OpenStreetMap
+            if city:
+                # Rechercher par ville
+                search_url = f'https://nominatim.openstreetmap.org/search'
+                params = {
+                    'q': f'shop in {city}',
+                    'format': 'json',
+                    'limit': 10,
+                    'addressdetails': 1
+                }
+            else:
+                # Valider et convertir les coordonnees
+                try:
+                    lat_float = float(lat)
+                    lon_float = float(lon)
+                except ValueError:
+                    return Response(
+                        {"error": "Coordonnees invalides"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Rechercher par coordonnees
+                search_url = f'https://nominatim.openstreetmap.org/search'
+                params = {
+                    'q': 'shop',
+                    'format': 'json',
+                    'limit': 10,
+                    'addressdetails': 1,
+                    'viewbox': f'{lon_float-0.1},{lat_float-0.1},{lon_float+0.1},{lat_float+0.1}',
+                    'bounded': 1
+                }
+            
+            headers = {
+                'User-Agent': 'E-Commerce-API/1.0 (Educational Project)'
+            }
+            
+            r = requests.get(
+                search_url,
+                params=params,
+                headers=headers,
+                timeout=10
+            )
+            r.raise_for_status()
+            data = r.json()
+            
+            # Formater les resultats
+            stores = []
+            for item in data:
+                # Utiliser le type ou category pour le nom si disponible, sinon display_name
+                name = item.get('namedetails', {}).get('name') or item.get('type', 'Magasin')
+                stores.append({
+                    'name': name,
+                    'lat': item.get('lat'),
+                    'lon': item.get('lon'),
+                    'address': item.get('display_name'),
+                    'type': item.get('type', 'shop')
+                })
+            
+            return Response({
+                'count': len(stores),
+                'stores': stores
+            })
+            
+        except requests.RequestException:
+            return Response(
+                {"error": "Service de geolocalisation indisponible"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )

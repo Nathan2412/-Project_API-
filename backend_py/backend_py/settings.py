@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "corsheaders",
     "backend_py.users",
     "backend_py.products",
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
     "backend_py.cart",
     "backend_py.payments",
     "backend_py.external",
+    "backend_py.reviews",
 ]
 
 MIDDLEWARE = [
@@ -107,6 +109,7 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "backend_py.utils.custom_exception_handler",
 }
 
@@ -116,6 +119,13 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "E-Commerce API",
+    "DESCRIPTION": "API REST pour la plateforme e-commerce - Projet ING2 2025",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:5173"])
