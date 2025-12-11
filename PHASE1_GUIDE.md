@@ -1,68 +1,122 @@
-# Phase 1 - Authentification, Commandes et Paiement
+# 📋 Historique du Développement
 
-## Nouvelles fonctionnalités
+Ce document retrace les phases de développement du projet e-commerce.
 
-### 1. Authentification JWT
-- **POST /api/auth/register** - Inscription (email, password, name)
-- **POST /api/auth/login** - Connexion (retourne un token JWT)
-- **GET /api/auth/me** - Profil utilisateur (protégé par token)
+---
 
-### 2. Gestion des commandes
-- **POST /api/orders** - Créer une commande (protégé)
-  - Vérifie le stock
-  - Calcule le total
-  - Décrémente automatiquement le stock
-  - Utilise des transactions SQL
-- **GET /api/orders** - Liste des commandes de l'utilisateur
-- **GET /api/orders/:id** - Détail d'une commande
+## Phase 1 - Authentification, Commandes et Paiement ✅
 
-### 3. Paiement Stripe
-- **POST /api/payment/create-intent** - Créer un Payment Intent
-- **POST /api/payment/webhook** - Webhook Stripe (confirme le paiement)
-- **POST /api/payment/confirm** - Confirmation manuelle (dev uniquement)
+### Fonctionnalités implémentées
 
-### 4. Base de données
-- Table `order_items` ajoutée (relation commandes ↔ produits)
-- Colonne `role` ajoutée à la table `users` (user/admin)
+#### 1. Authentification JWT
+- **POST /auth/register/** - Inscription utilisateur
+- **POST /auth/login/** - Connexion (retourne tokens JWT)
+- **POST /auth/token/refresh/** - Rafraîchir le token
+- **GET /auth/me/** - Profil utilisateur (protégé)
 
-## Configuration requise
+#### 2. Gestion des commandes
+- **POST /orders/** - Créer une commande (protégé)
+  - Vérification du stock
+  - Calcul automatique du total
+  - Décrémentation du stock
+  - Transactions SQL
+- **GET /orders/** - Liste des commandes utilisateur
+- **GET /orders/:id/** - Détail d'une commande
 
-### Variables d'environnement (.env)
+#### 3. Paiement Stripe
+- **POST /payment/create-intent/** - Créer un Payment Intent
+- **POST /payment/webhook/** - Webhook Stripe
+
+#### 4. Base de données
+- Migration vers Django ORM
+- Modèles : User, Product, Order, OrderItem, CartItem
+
+---
+
+## Phase 2 - Sécurité et API Externes ✅
+
+### Fonctionnalités implémentées
+
+#### 1. Sécurité avancée
+- Rate limiting (throttling)
+- Headers de sécurité (HSTS, CSP, X-Frame-Options)
+- Middleware personnalisé
+- Validation des entrées
+
+#### 2. API Externes
+- **GET /external/products/** - FakeStore API
+- **GET /external/rates/** - Taux de change
+
+#### 3. Panier utilisateur
+- **GET /cart/** - Contenu du panier
+- **POST /cart/** - Ajouter au panier
+- **PUT /cart/:id/** - Modifier quantité
+- **DELETE /cart/:id/** - Retirer du panier
+
+---
+
+## Phase 3 - Frontend et Intégration ✅
+
+### Fonctionnalités implémentées
+
+#### 1. Interface React
+- Catalogue produits
+- Panier interactif
+- Formulaires d'authentification
+- Notifications toast
+
+#### 2. Intégration complète
+- Historique des commandes
+- Convertisseur de devises
+- Import produits externes
+- Gestion JWT avec refresh
+
+---
+
+## Stack Technique Finale
+
+| Composant | Technologie |
+|-----------|-------------|
+| Backend | Django 5.2 + DRF |
+| Frontend | React 19 + Vite |
+| Auth | JWT (Simple JWT) |
+| DB | PostgreSQL / SQLite |
+| Paiement | Stripe |
+| API Externe | FakeStore, ExchangeRate |
+
+---
+
+## Configuration (.env)
+
 ```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=votre_mot_de_passe
-DB_NAME=ecommerce_db
-PORT=5000
-JWT_SECRET=changez_moi_en_production
-STRIPE_SECRET_KEY=sk_test_votre_cle_stripe
-STRIPE_WEBHOOK_SECRET=whsec_votre_webhook_secret
+SECRET_KEY=votre-cle-secrete
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+DB_ENGINE=sqlite3
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+STRIPE_SECRET_KEY=sk_test_xxx
+STRIPE_WEBHOOK_SECRET=whsec_xxx
 ```
 
-### Mettre à jour la base de données
-```powershell
-cd 'C:\Program Files\MySQL\MySQL Server 8.0\bin'
-.\mysql -u root -p -e "source C:\Users\natha\OneDrive\ING2\test aapi\db\schema.sql"
-```
+---
 
-## Test des endpoints
+## Test des Endpoints
 
-### 1. Inscription
+### Inscription
 ```bash
-POST http://localhost:5000/api/auth/register
+POST http://localhost:8000/auth/register/
 Content-Type: application/json
 
 {
+  "username": "testuser",
   "email": "test@example.com",
-  "password": "password123",
-  "name": "Test User"
+  "password": "password123"
 }
 ```
 
-### 2. Connexion
+### Connexion
 ```bash
-POST http://localhost:5000/api/auth/login
+POST http://localhost:8000/auth/login/
 Content-Type: application/json
 
 {
@@ -70,51 +124,24 @@ Content-Type: application/json
   "password": "password123"
 }
 ```
-Retourne : `{ "token": "...", "user": {...} }`
 
-### 3. Créer une commande (avec token)
+### Créer une commande
 ```bash
-POST http://localhost:5000/api/orders
-Authorization: Bearer VOTRE_TOKEN
+POST http://localhost:8000/orders/
+Authorization: Bearer <token>
 Content-Type: application/json
 
 {
   "items": [
-    { "product_id": 1, "quantity": 2 },
-    { "product_id": 2, "quantity": 1 }
+    { "product_id": 1, "quantity": 2 }
   ]
 }
 ```
 
-### 4. Créer un Payment Intent
-```bash
-POST http://localhost:5000/api/payment/create-intent
-Authorization: Bearer VOTRE_TOKEN
-Content-Type: application/json
+---
 
-{
-  "order_id": 1
-}
-```
+## Documentation
 
-### 5. Profil utilisateur
-```bash
-GET http://localhost:5000/api/auth/me
-Authorization: Bearer VOTRE_TOKEN
-```
-
-## Sécurité
-
-- Mots de passe hashés avec bcrypt (10 rounds)
-- Tokens JWT avec expiration (7 jours)
-- Middleware de protection des routes
-- Validation des données avec Joi
-- Transactions SQL pour les commandes (intégrité des données)
-
-## Prochaines étapes (Phase 2)
-
-- CRUD produits protégé admin
-- Pagination et filtres
-- Frontend : routing, state management, formulaires
-- Upload d'images produits
-- Tests et documentation Swagger
+- [README.md](README.md) - Vue d'ensemble
+- [instruction.md](instruction.md) - Guide d'installation
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) - Documentation API complète

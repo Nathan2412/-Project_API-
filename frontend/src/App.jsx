@@ -3,6 +3,9 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { getProducts, apiPost, apiGet } from './api'
+import OrderHistory from './components/OrderHistory'
+import CurrencyConverter from './components/CurrencyConverter'
+import ProfileModal from './components/ProfileModal'
 
 // Sécurité: Sanitize les entrées utilisateur
 const sanitizeInput = (input) => {
@@ -35,6 +38,11 @@ function App() {
   
   // Toast notifications
   const [toast, setToast] = useState(null)
+  
+  // Modales additionnelles
+  const [showOrders, setShowOrders] = useState(false)
+  const [showCurrency, setShowCurrency] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
 
   // Sauvegarder le panier dans localStorage
   useEffect(() => {
@@ -205,6 +213,11 @@ function App() {
             <p className="tagline">Découvrez nos produits exceptionnels</p>
           </div>
           <div className="header-right">
+            {/* Bouton convertisseur de devises */}
+            <button className="tool-btn" onClick={() => setShowCurrency(true)} title="Convertisseur de devises">
+              💱
+            </button>
+            
             <button className="cart-btn" onClick={() => setCartOpen(true)}>
               🛒 Panier
               {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
@@ -213,6 +226,8 @@ function App() {
             {user ? (
               <div className="user-info">
                 <span>👤 {user.username}</span>
+                <button className="profile-btn" onClick={() => setShowProfile(true)} title="Mon profil">⚙️</button>
+                <button className="orders-btn" onClick={() => setShowOrders(true)}>📦 Commandes</button>
                 <button className="logout-btn" onClick={logout}>Déconnexion</button>
               </div>
             ) : (
@@ -229,9 +244,11 @@ function App() {
         <section className="products-section">
           <div className="section-header">
             <h2>Nos Produits</h2>
-            <button className="refresh-btn" onClick={loadProducts}>
-              🔄 Rafraîchir
-            </button>
+            <div className="section-actions">
+              <button className="refresh-btn" onClick={loadProducts}>
+                🔄 Rafraîchir
+              </button>
+            </div>
           </div>
 
           {error && <p className="error-message">{error}</p>}
@@ -406,6 +423,35 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Order History Modal */}
+      {showOrders && user && (
+        <OrderHistory 
+          token={token} 
+          onClose={() => setShowOrders(false)} 
+        />
+      )}
+
+      {/* Currency Converter Modal */}
+      {showCurrency && (
+        <CurrencyConverter 
+          onClose={() => setShowCurrency(false)} 
+        />
+      )}
+
+      {/* Profile Modal */}
+      {showProfile && user && (
+        <ProfileModal
+          user={user}
+          token={token}
+          onClose={() => setShowProfile(false)}
+          onUpdate={(updatedUser) => {
+            setUser(updatedUser)
+            localStorage.setItem('user', JSON.stringify(updatedUser))
+            showToast('Profil mis à jour avec succès')
+          }}
+        />
       )}
 
       {/* Toast Notification */}

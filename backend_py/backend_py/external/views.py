@@ -60,11 +60,31 @@ class Rates(APIView):
             )
         
         try:
-            url = f'https://api.exchangerate.host/latest?base={base}'
+            # Utiliser l'API gratuite frankfurter.app (basée sur la BCE)
+            url = f'https://api.frankfurter.app/latest?from={base}'
             r = requests.get(url, timeout=10)
             r.raise_for_status()
-            return Response(r.json())
+            data = r.json()
+            # Reformater pour correspondre au format attendu
+            return Response({
+                "base": data.get("base", base),
+                "date": data.get("date"),
+                "rates": data.get("rates", {})
+            })
         except requests.RequestException:
+            # Fallback avec des taux statiques si l'API est indisponible
+            fallback_rates = {
+                "EUR": {"USD": 1.08, "GBP": 0.86, "JPY": 162.5, "CHF": 0.94, "CAD": 1.47, "AUD": 1.65, "CNY": 7.82},
+                "USD": {"EUR": 0.93, "GBP": 0.79, "JPY": 150.2, "CHF": 0.87, "CAD": 1.36, "AUD": 1.53, "CNY": 7.24},
+                "GBP": {"EUR": 1.17, "USD": 1.26, "JPY": 189.8, "CHF": 1.10, "CAD": 1.72, "AUD": 1.93, "CNY": 9.15},
+            }
+            if base in fallback_rates:
+                return Response({
+                    "base": base,
+                    "date": "2025-12-11",
+                    "rates": fallback_rates[base],
+                    "note": "Taux approximatifs (API externe indisponible)"
+                })
             return Response(
                 {"error": "Service indisponible"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE

@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, ScopedRateThrottle
 from rest_framework_simplejwt.views import TokenObtainPairView
-from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer
+from .serializers import UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer, UpdateProfileSerializer
 
 
 class LoginThrottle(AnonRateThrottle):
@@ -41,10 +41,29 @@ class RegisterView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-class MeView(generics.RetrieveAPIView):
-    """Recupere les infos de l'utilisateur connecte"""
-    serializer_class = UserSerializer
+class MeView(generics.RetrieveUpdateAPIView):
+    """Recupere et met à jour les infos de l'utilisateur connecte"""
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        """Retourne le serializer approprié selon la méthode HTTP"""
+        if self.request.method in ['PUT', 'PATCH']:
+            return UpdateProfileSerializer
+        return UserSerializer
 
     def get_object(self):
         return self.request.user
+    
+    def update(self, request, *args, **kwargs):
+        """Met à jour le profil utilisateur"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        # Retourner les infos utilisateur mises à jour
+        return Response({
+            "message": "Profil mis à jour",
+            "user": UserSerializer(instance).data
+        })
