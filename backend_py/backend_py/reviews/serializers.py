@@ -21,7 +21,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """Prevenir les doublons: un utilisateur ne peut noter qu'une fois par produit"""
+        # Verifier que le contexte et l'utilisateur sont disponibles
+        if not self.context or 'request' not in self.context:
+            raise serializers.ValidationError("Contexte de requete manquant")
+        
         user = self.context['request'].user
+        if not user or not user.is_authenticated:
+            raise serializers.ValidationError("Authentification requise")
+        
         product = data.get('product')
         
         # Lors de la creation, verifier qu'il n'existe pas deja un avis
@@ -35,5 +42,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Creer un avis avec l'utilisateur authentifie"""
+        if not self.context or 'request' not in self.context:
+            raise serializers.ValidationError("Contexte de requete manquant")
+        
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)

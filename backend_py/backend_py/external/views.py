@@ -128,6 +128,16 @@ class StoreLocator(APIView):
                     'addressdetails': 1
                 }
             else:
+                # Valider et convertir les coordonnees
+                try:
+                    lat_float = float(lat)
+                    lon_float = float(lon)
+                except ValueError:
+                    return Response(
+                        {"error": "Coordonnees invalides"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
                 # Rechercher par coordonnees
                 search_url = f'https://nominatim.openstreetmap.org/search'
                 params = {
@@ -135,7 +145,7 @@ class StoreLocator(APIView):
                     'format': 'json',
                     'limit': 10,
                     'addressdetails': 1,
-                    'viewbox': f'{float(lon)-0.1},{float(lat)-0.1},{float(lon)+0.1},{float(lat)+0.1}',
+                    'viewbox': f'{lon_float-0.1},{lat_float-0.1},{lon_float+0.1},{lat_float+0.1}',
                     'bounded': 1
                 }
             
@@ -155,8 +165,10 @@ class StoreLocator(APIView):
             # Formater les resultats
             stores = []
             for item in data:
+                # Utiliser le type ou category pour le nom si disponible, sinon display_name
+                name = item.get('namedetails', {}).get('name') or item.get('type', 'Magasin')
                 stores.append({
-                    'name': item.get('display_name', 'Magasin'),
+                    'name': name,
                     'lat': item.get('lat'),
                     'lon': item.get('lon'),
                     'address': item.get('display_name'),
@@ -172,9 +184,4 @@ class StoreLocator(APIView):
             return Response(
                 {"error": "Service de geolocalisation indisponible"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-        except ValueError:
-            return Response(
-                {"error": "Coordonnees invalides"},
-                status=status.HTTP_400_BAD_REQUEST
             )
