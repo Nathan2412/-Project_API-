@@ -24,6 +24,9 @@ class OrderViewSet(viewsets.ModelViewSet):
         return OrderSerializer
 
     def get_queryset(self):
+        if self.request.user.is_staff:
+            # Les admins peuvent voir toutes les commandes
+            return Order.objects.all().order_by('-created_at')
         return Order.objects.filter(user=self.request.user).order_by('-created_at')
     
     def create(self, request, *args, **kwargs):
