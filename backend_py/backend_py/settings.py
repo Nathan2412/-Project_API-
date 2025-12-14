@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "corsheaders",
+    "graphene_django",
+    "django_filters",
     "backend_py.users",
     "backend_py.products",
     "backend_py.orders",
@@ -33,6 +35,7 @@ INSTALLED_APPS = [
     "backend_py.payments",
     "backend_py.external",
     "backend_py.reviews",
+    "backend_py.graphql_api",
 ]
 
 MIDDLEWARE = [
@@ -169,3 +172,20 @@ LOGGING = {
 
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default=None)
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default=None)
+
+# ========================================
+# CONFIGURATION GRAPHQL SÉCURISÉE
+# ========================================
+GRAPHENE = {
+    "SCHEMA": "backend_py.graphql_api.schema.schema",
+    # Désactiver l'interface GraphiQL en production
+    "GRAPHIQL": DEBUG,
+    # Middleware pour l'authentification JWT
+    "MIDDLEWARE": [
+        "backend_py.graphql_api.middleware.DepthAnalysisMiddleware",
+    ],
+}
+
+# Limites de sécurité GraphQL
+GRAPHQL_MAX_DEPTH = 5  # Profondeur max des requêtes
+GRAPHQL_MAX_COMPLEXITY = 100  # Complexité max des requêtes

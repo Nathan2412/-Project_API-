@@ -1,0 +1,101 @@
+{
+  "timestamp": "2025-12-14T08:04:10.630436",
+  "results": [
+    {
+      "test": "Endpoint GraphQL",
+      "status": "INFO",
+      "message": "Endpoint accessible",
+      "details": "URL: http://localhost:8000/graphql/"
+    },
+    {
+      "test": "Introspection",
+      "status": "WARNING",
+      "message": "Introspection activ\u00e9e (28 types)",
+      "details": "Normal en dev - Sera d\u00e9sactiv\u00e9 en production (DEBUG=False)"
+    },
+    {
+      "test": "Auth - me",
+      "status": "SECURE",
+      "message": "Query 'me' prot\u00e9g\u00e9e",
+      "details": ""
+    },
+    {
+      "test": "Auth - myOrders",
+      "status": "SECURE",
+      "message": "Query 'myOrders' prot\u00e9g\u00e9e",
+      "details": ""
+    },
+    {
+      "test": "Auth - myCart",
+      "status": "SECURE",
+      "message": "Query 'myCart' prot\u00e9g\u00e9e",
+      "details": ""
+    },
+    {
+      "test": "Mutation - addToCart",
+      "status": "VULNERABLE",
+      "message": "Mutation 'addToCart' accessible sans auth!",
+      "details": ""
+    },
+    {
+      "test": "Mutation - createOrder",
+      "status": "VULNERABLE",
+      "message": "Mutation 'createOrder' accessible sans auth!",
+      "details": ""
+    },
+    {
+      "test": "Mutation - addReview",
+      "status": "VULNERABLE",
+      "message": "Mutation 'addReview' accessible sans auth!",
+      "details": ""
+    },
+    {
+      "test": "SQL Injection",
+      "status": "SECURE",
+      "message": "Aucune vuln\u00e9rabilit\u00e9 SQL",
+      "details": "Django ORM utilise des requ\u00eates param\u00e9tr\u00e9es"
+    },
+    {
+      "test": "Batch Attack",
+      "status": "SECURE",
+      "message": "Batching limit\u00e9 ou d\u00e9sactiv\u00e9",
+      "details": ""
+    },
+    {
+      "test": "Header X-Content-Type-Options",
+      "status": "SECURE",
+      "message": "Pr\u00e9sent: nosniff",
+      "details": ""
+    },
+    {
+      "test": "Header X-Frame-Options",
+      "status": "SECURE",
+      "message": "Pr\u00e9sent: DENY",
+      "details": ""
+    },
+    {
+      "test": "Header Content-Security-Policy",
+      "status": "SECURE",
+      "message": "Pr\u00e9sent: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+      "details": ""
+    },
+    {
+      "test": "Header Referrer-Policy",
+      "status": "SECURE",
+      "message": "Pr\u00e9sent: strict-origin-when-cross-origin",
+      "details": ""
+    },
+    {
+      "test": "Query allProducts",
+      "status": "SECURE",
+      "message": "12 produits accessibles",
+      "details": ""
+    },
+    {
+      "test": "Donn\u00e9es sensibles",
+      "status": "SECURE",
+      "message": "Seuls champs s\u00fbrs: ['id', 'username', 'email']",
+      "details": ""
+    }
+  ]
+}
