@@ -1,0 +1,106 @@
+{
+  "timestamp": "2025-12-12T09:52:10.634967",
+  "base_url": "http://localhost:8000",
+  "score": 75.0,
+  "grade": "B",
+  "passed": 9,
+  "failed": 3,
+  "results": [
+    {
+      "test": "SQL Injection - General",
+      "category": "Injection SQL",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Aucune injection SQL détectée (ORM Django protège)",
+      "timestamp": "2025-12-12T09:39:36.562772"
+    },
+    {
+      "test": "XSS - All Endpoints",
+      "category": "Cross-Site Scripting",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Aucune vulnérabilité XSS détectée (API JSON)",
+      "timestamp": "2025-12-12T09:41:06.230114"
+    },
+    {
+      "test": "Broken Authentication",
+      "category": "Authentication",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Authentification correctement sécurisée",
+      "timestamp": "2025-12-12T09:41:58.662013"
+    },
+    {
+      "test": "IDOR",
+      "category": "Broken Access Control",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Contrôle d'accès correct - isolation des données",
+      "timestamp": "2025-12-12T09:46:27.453985"
+    },
+    {
+      "test": "Rate Limiting - /products/",
+      "category": "DoS Protection",
+      "passed": false,
+      "severity": "MEDIUM",
+      "details": "Pas de rate limiting sur /products/",
+      "timestamp": "2025-12-12T09:47:27.676776"
+    },
+    {
+      "test": "Rate Limiting - /auth/login/",
+      "category": "DoS Protection",
+      "passed": false,
+      "severity": "MEDIUM",
+      "details": "Pas de rate limiting sur /auth/login/",
+      "timestamp": "2025-12-12T09:48:27.937362"
+    },
+    {
+      "test": "Rate Limiting - /auth/register/",
+      "category": "DoS Protection",
+      "passed": false,
+      "severity": "MEDIUM",
+      "details": "Pas de rate limiting sur /auth/register/",
+      "timestamp": "2025-12-12T09:49:28.131357"
+    },
+    {
+      "test": "Mass Assignment",
+      "category": "Input Validation",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Protection contre le mass assignment active",
+      "timestamp": "2025-12-12T09:49:40.379452"
+    },
+    {
+      "test": "Path Traversal",
+      "category": "File Access",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Pas de vulnérabilité Path Traversal",
+      "timestamp": "2025-12-12T09:50:16.886363"
+    },
+    {
+      "test": "SSRF",
+      "category": "Server-Side Request Forgery",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Pas de vulnérabilité SSRF (paramètres validés)",
+      "timestamp": "2025-12-12T09:51:01.502235"
+    },
+    {
+      "test": "JWT Security",
+      "category": "Authentication",
+      "passed": true,
+      "severity": "INFO",
+      "details": "JWT correctement sécurisé",
+      "timestamp": "2025-12-12T09:51:09.619526"
+    },
+    {
+      "test": "Input Validation",
+      "category": "Input Validation",
+      "passed": true,
+      "severity": "INFO",
+      "details": "Validation des entrées correcte",
+      "timestamp": "2025-12-12T09:52:10.623711"
+    }
+  ]
+}
